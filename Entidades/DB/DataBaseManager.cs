@@ -5,9 +5,11 @@ using Entidades.Interfaces;
 
 namespace Entidades.DataBase
 {
-    public class DataBaseManager
+    public  static class DataBaseManager
     {
+        private static string path;
 
+        private static 
 
     }
 }
