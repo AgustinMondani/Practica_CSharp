@@ -1,25 +1,25 @@
-﻿using Entidades.Exceptions;
+﻿using Entidades.DataBase;
+using Entidades.Exceptions;
 using Entidades.Files;
 using Entidades.Interfaces;
 
 
 namespace Entidades.Modelos
 {
+    public delegate void DelegafoDemoraAtencion(double demora);
+    public delegate void DelegadoNuevoIngreso(IComestible menu);
 
-
-    public class Cocinero
+    public class Cocinero<T> where T : IComestible, new() 
     {
-        private int cantPedidosFinalizados;
-        private string nombre;
-        private double demoraPreparacionTotal;
         private CancellationTokenSource cancellation;
-
+        private int cantPedidosFinalizados;
+        private double demoraPreparacionTotal;
+        private string nombre;
+        private T menu;
         private Task tarea;
 
-
-
-
-
+        public event DelegafoDemoraAtencion OnDemora;
+        public event DelegadoNuevoIngreso OnIngreso;
         public Cocinero(string nombre)
         {
             this.nombre = nombre;
@@ -55,20 +55,40 @@ namespace Entidades.Modelos
 
         private void IniciarIngreso()
         {
-
+            tarea = new Task(() =>
+            {
+                if (!this.cancellation.IsCancellationRequested)
+                {
+                    NotificarNuevoIngreso();
+                    EsperarProximoIngreso();
+                    cantPedidosFinalizados += 1;
+                    DataBaseManager.GuardarTicket(nombre, menu);
+                }
+            });
         }
 
         private void NotificarNuevoIngreso()
         {
-
+            if(OnIngreso is not null)
+            {
+                menu = new T();
+                menu.InciarPreparacion();
+                OnIngreso(menu);
+            }
         }
         private void EsperarProximoIngreso()
         {
-            int tiempoEspera = 0;
-
-
-            this.demoraPreparacionTotal += tiempoEspera;
-
+            int tiempoTrascurrido = 0;
+            if(OnDemora is not null)
+            {
+                while (cancellation.IsCancellationRequested.Equals(false) && !menu.Estado)
+                {
+                    OnDemora.Invoke(tiempoTrascurrido);
+                    Thread.Sleep(1000);
+                    tiempoTrascurrido ++;
+                }
+                this.demoraPreparacionTotal += tiempoTrascurrido;
+            }
         }
     }
 }
