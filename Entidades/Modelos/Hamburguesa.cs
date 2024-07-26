@@ -8,33 +8,34 @@ using Entidades.DataBase;
 
 namespace Entidades.Modelos
 {
-    public class Hamburguesa 
+    public class Hamburguesa : IComestible
     {
 
+        private double costo;
         private static int costoBase;
         private bool esDoble;
-        private double costo;
         private bool estado;
         private string imagen;
         List<EIngrediente> ingredientes;
         Random random;
+
+
+        public string Ticket => $"{this}\nTotal a pagar:{this.costo}";
+        public string Imagen { get => imagen; }
+        public bool Estado { get => estado;}
+
+
         static Hamburguesa() => Hamburguesa.costoBase = 1500;
-
-
-        public Hamburguesa() : this(false) { }
         public Hamburguesa(bool esDoble)
         {
             this.esDoble = esDoble;
             this.random = new Random();
         }
-
-        public string Ticket => $"{this}\nTotal a pagar:{this.costo}";
-
-
+        public Hamburguesa() : this(false) { }
 
         private void AgregarIngredientes()
         {
-      
+            ingredientes = random.IngredientesAleatorios();
         }
 
         private string MostrarDatos()
@@ -47,21 +48,27 @@ namespace Entidades.Modelos
 
         }
 
-
-
         public override string ToString() => this.MostrarDatos();
 
         public void FinalizarPreparacion(string cocinero)
         {
-
+            costo = ingredientes.CalcularCostoIngredientes(costoBase);
+            estado = true;
         }
 
         public void IniciarPreparacion()
         {
-            if (!this.estado)
+            if (!this.Estado)
             {
-
+                int numeroAleatorio = random.Next(1, 9);
+                imagen = DataBaseManager.GetImagenComida($"Hamburguesa_{numeroAleatorio}");
+                AgregarIngredientes();
             }
+        }
+
+        public void InciarPreparacion()
+        {
+            throw new NotImplementedException();
         }
     }
 }
